@@ -1,0 +1,16 @@
+dataset_dir: /compute/autobot-0-15/hturki/campus_undist_pix4d_converted_kilo
+dataset_type: chunks
+pretrained_cfg_path: cfgs/paper/pretrain/campus.yaml
+pretrained_checkpoint_path: logs/paper/pretrain/campus/checkpoint_0185000.pth
+global_domain_min: [-0.1754, -0.6896, -0.7851]
+global_domain_max: [0.1666, 0.6852, 0.7995]
+resolution:
+- 108
+- 434
+- 500
+subsample_resolution:
+- 3
+- 3
+- 3
+threshold: 10
+voxel_batch_size: 16384

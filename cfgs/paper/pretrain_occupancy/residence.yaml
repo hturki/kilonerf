@@ -1,0 +1,16 @@
+dataset_dir: /ssd0/hturki/residence_undist_pix4d_converted_kilo
+dataset_type: chunks
+pretrained_cfg_path: cfgs/paper/pretrain/residence.yaml
+pretrained_checkpoint_path: logs/paper/pretrain/residence/checkpoint_0380000.pth
+global_domain_min: [-0.1175, -0.5063, -0.8650]
+global_domain_max: [0.3791, 0.5063, 0.8650]
+resolution:
+- 144
+- 293
+- 500
+subsample_resolution:
+- 3
+- 3
+- 3
+threshold: 10
+voxel_batch_size: 16384

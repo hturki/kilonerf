@@ -1,0 +1,16 @@
+dataset_dir: /data2/sci-art_undist_pix4d_converted_kilo
+dataset_type: chunks
+pretrained_cfg_path: cfgs/paper/pretrain/sci-art.yaml
+pretrained_checkpoint_path: logs/paper/pretrain/sci-art/checkpoint_0370000.pth
+global_domain_min: [-0.4358, -0.8475, -0.7289]
+global_domain_max: [0.5676, 0.8472, 0.7289]
+resolution:
+- 300
+- 500
+- 430
+subsample_resolution:
+- 3
+- 3
+- 3
+threshold: 10
+voxel_batch_size: 16384

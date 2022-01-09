@@ -6,7 +6,6 @@ from run_nerf_helpers import get_rays, replace_transparency_by_background_color
 class FastKiloNeRFRenderer():
     def __init__(self, c2w, intrinsics, background_color, occupancy_grid, multi_network, domain_mins, domain_maxs, 
         white_bkgd, max_depth_index, min_distance, max_distance, performance_monitoring, occupancy_resolution, max_samples_per_ray, transmittance_threshold):
-        
         self.set_camera_pose(c2w)
         self.intrinsics = intrinsics
         self.background_color = background_color

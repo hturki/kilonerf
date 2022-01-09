@@ -7,12 +7,12 @@ deepvoxels_shape: greek
 blender_white_background: True
 blender_half_res: False
 llff_factor: 8
-llff_no_ndc: False
+llff_no_ndc: True
 llff_lindisp: False
 llff_spherify: False
 llff_hold: False
 print_interval: 100
-checkpoint_interval: 10000
+checkpoint_interval: 5000
 render_testset_interval: 10000
 render_video_interval: 100000000 # deactivated by default
 chunk_size: 32768

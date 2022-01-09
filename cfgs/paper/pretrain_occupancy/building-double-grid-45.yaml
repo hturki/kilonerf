@@ -1,0 +1,16 @@
+dataset_dir: /home/ubuntu/building-double-grid-45_undist_pix4d_llff
+dataset_type: chunks
+pretrained_cfg_path: cfgs/paper/pretrain/building-double-grid-45.yaml
+pretrained_checkpoint_path: logs/paper/pretrain/building-double-grid-45/checkpoint_0415000.pth
+global_domain_min: [0.0512, -0.5883, -0.9689]
+global_domain_max: [0.2290, 0.5881, 0.9689]
+resolution:
+- 46
+- 302
+- 500
+subsample_resolution:
+- 3
+- 3
+- 3
+threshold: 10
+voxel_batch_size: 16384

@@ -49,14 +49,14 @@ echo "export LD_LIBRARY_PATH=\"/usr/local/cuda/lib64:\$LD_LIBRARY_PATH\"" >> ~/.
 Download magma from http://icl.utk.edu/projectsfiles/magma/downloads/magma-2.5.4.tar.gz then build and install to  `/usr/local/magma`
 ```
 sudo apt install gfortran libopenblas-dev
-wget http://icl.utk.edu/projectsfiles/magma/downloads/magma-2.5.4.tar.gz
-tar -zxvf magma-2.5.4.tar.gz
-cd magma-2.5.4
+wget http://icl.utk.edu/projectsfiles/magma/downloads/magma-2.6.1.tar.gz
+tar -zxvf magma-2.6.1.tar.gz
+cd magma-2.6.1
 cp make.inc-examples/make.inc.openblas make.inc
-export GPU_TARGET="Maxwell Pascal Volta Turing Ampere"
-export CUDADIR=/usr/local/cuda
+export GPU_TARGET="Volta"
+export CUDADIR=/usr/local/cuda-11.3
 export OPENBLASDIR="/usr"
-make
+make -j8
 sudo -E make install prefix=/usr/local/magma
 ```
 For further information on installing magma see: http://icl.cs.utk.edu/projectsfiles/magma/doxygen/installing.html

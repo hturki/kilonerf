@@ -700,7 +700,7 @@ def query_multi_network(multi_network, domain_mins, domain_maxs, points, directi
         PerfMonitor.add('global to local', ['input transformation'])
     
     # Fourier features
-    fourier_embedding_implementation = 'custom_kernel_v2' # pytorch
+    fourier_embedding_implementation = 'pytorch' #'custom_kernel_v2' # pytorch
     if position_fourier_embedding is not None:
         embedded_points = position_fourier_embedding(points_reordered.unsqueeze(0), implementation=fourier_embedding_implementation).squeeze(0)
     else:

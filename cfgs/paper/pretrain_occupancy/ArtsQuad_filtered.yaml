@@ -1,0 +1,16 @@
+dataset_dir: /data2/ArtsQuad_filtered_converted_kilo
+dataset_type: chunks
+pretrained_cfg_path: cfgs/paper/pretrain/ArtsQuad_filtered.yaml
+pretrained_checkpoint_path: logs/paper/pretrain/ArtsQuad_filtered/checkpoint_0325000.pth
+global_domain_min: [-0.1247, -0.4839, -0.3615]
+global_domain_max: [0.0615, 0.4839, 0.6794]
+resolution:
+- 90
+- 465
+- 500
+subsample_resolution:
+- 3
+- 3
+- 3
+threshold: 10
+voxel_batch_size: 16384
