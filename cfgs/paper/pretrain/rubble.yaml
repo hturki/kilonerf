@@ -1,7 +1,6 @@
 chunk_size: 8192
-dataset_dir: /compute/autobot-0-15/hturki/rubble_undist_pix4d_converted_kilo
-global_domain_min: [-0.0839, -0.8365, -0.9920]
-global_domain_max: [0.3161, 0.8365, 0.9960]
+global_domain_min: [0.0618465, -0.696314, -0.832038]
+global_domain_max: [0.264971, 0.696314, 0.828704]
 near: 0
 far: 1
 dataset_type: chunks
@@ -26,3 +25,7 @@ refeed_position_index: 4
 render_testset_interval: 1500000
 rng_seed: 5108603
 llff_spherify: True
+chunk_paths:
+  - /compute/trinity-0-13/hturki/cache/rubble-dense
+  - /compute/trinity-0-21/hturki/cache/rubble-dense
+val_path: /compute/trinity-1-29/hturki/mega-nerf-data/rubble/val/metadata

@@ -638,35 +638,35 @@ def train(cfg, log_path, render_cfg_path):
     #     del H, W, focal, hwf
 
     if cfg['dataset_type'] == 'chunks':
-        basedir = pathlib.Path(cfg['dataset_dir'])
-
         if not has_flag(cfg, 'render_to_screen'):
-            chunk_dir = basedir / 'train'
-            chunks = list(chunk_dir.iterdir())
+            chunk_paths = [pathlib.Path(x) for x in cfg['chunk_paths']]
+            chunks = []
+            for chunk_path in chunk_paths:
+                    for child in list((chunk_path / 'chunks').iterdir()):
+                        chunks.append(child)
+
             chunk_index = itertools.cycle(range(len(chunks)))
-            sample_index = None
             cur_loaded = None
 
         val_images = []
         val_poses = []
         val_intrinsics = []
-        for pose_path in sorted((basedir / 'val' / 'poses').iterdir()):
-            try:
-                pose = torch.FloatTensor(np.load(pose_path))
-            except:
-                pose = torch.load(pose_path)
-            val_poses.append(pose.unsqueeze(0))
-            image_path = pose_path.parent.parent / 'rgbs' / '{}.jpg'.format(pose_path.stem)
-            if not image_path.exists():
-                image_path = pose_path.parent.parent / 'rgbs' / '{}.png'.format(pose_path.stem)
-                assert image_path.exists()
+        for metadata_path in sorted(pathlib.Path(cfg['val_path']).iterdir()):
+            metadata = torch.load(metadata_path)
+            val_poses.append(metadata['c2w'].unsqueeze(0))
+
+            image_path = None
+            for extension in ['.jpg', '.JPG', '.png', '.PNG']:
+                candidate = metadata_path.parent.parent / 'rgbs' / '{}{}'.format(metadata_path.stem, extension)
+                if candidate.exists():
+                    image_path = candidate
+                    break
+
+            assert image_path.exists()
             image = torch.FloatTensor(np.array(Image.open(image_path), dtype=np.float32) / 255.)
             val_images.append(image)
 
-            try:
-                intrin = torch.FloatTensor(np.load(pose_path.parent.parent / 'intrinsics' / pose_path.name))
-            except:
-                intrin = torch.load(pose_path.parent.parent / 'intrinsics' / pose_path.name)
+            intrin = metadata['intrinsics']
             val_intrinsics.append(
                 CameraIntrinsics(image.shape[0], image.shape[1], intrin[0], intrin[1], intrin[2], intrin[3]))
 
@@ -1143,7 +1143,7 @@ def train(cfg, log_path, render_cfg_path):
         dt = time.time() - time0
 
         # Rest is logging
-        if i % cfg['render_video_interval'] == 0 and i > 0:
+        if i % cfg['render_video_interval'] == 0 or i == start: # and i > 0:
             # Turn on testing mode
             model.eval()
             with torch.no_grad():
@@ -1153,7 +1153,7 @@ def train(cfg, log_path, render_cfg_path):
             # imageio.mimwrite(moviebase + 'rgb.mp4', to8b(rgbs), fps=30, quality=8)
             # imageio.mimwrite(moviebase + 'disp.mp4', to8b(disps / np.max(disps)), fps=30, quality=8)
 
-        if i % cfg['render_testset_interval'] == 0 and i > 0:
+        if i % cfg['render_testset_interval'] == 0 or i == start: # and i > 0:
             testsavedir = log_path + '/testset_{:06d}'.format(i)
             os.makedirs(testsavedir, exist_ok=True)
             print('test poses shape', val_poses.shape)

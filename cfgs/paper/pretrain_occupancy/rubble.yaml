@@ -1,12 +1,13 @@
 dataset_dir: /compute/autobot-0-15/hturki/rubble_undist_pix4d_converted_kilo
 dataset_type: chunks
 pretrained_cfg_path: cfgs/paper/pretrain/rubble.yaml
-pretrained_checkpoint_path: logs/paper/pretrain/rubble/checkpoint_0250000.pth
-global_domain_min: [-0.0839, -0.8365, -0.9920]
-global_domain_max: [0.3161, 0.8365, 0.9960]
+pretrained_checkpoint_path: /data2/hturki/mega-nerf-results/merged/rubble/rubble-8.pt
+global_domain_min: [0.0618465, -0.696314, -0.832038]
+global_domain_max: [0.264971, 0.696314, 0.828704]
+image_index: 0
 resolution:
-- 108
-- 434
+- 73
+- 419
 - 500
 subsample_resolution:
 - 3

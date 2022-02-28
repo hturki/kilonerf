@@ -94,7 +94,7 @@ def preprocess_examples(batch_examples, domain_mins, domain_maxs, cfg, position_
         if cfg['num_frequencies'] > 0:
             batch_inputs = position_fourier_embedding(batch_inputs)
         batch_targets = batch_examples[:, :, 3].unsqueeze(2)
-    elif cfg['outputs'] == 'color_and_density':
+    elif cfg['outputs'] == 'color_and_density' or cfg['outputs'] == 'color_and_density_mega':
         batch_positions = batch_examples[:, :, 0:3]
         if not has_flag(cfg, 'use_global_coordinates'):
             batch_positions = convert_to_local_coords_multi(batch_positions, domain_mins, domain_maxs)
@@ -116,7 +116,7 @@ def postprocess_output(raw_output, cfg):
             return F.leaky_relu(raw_output[:, :, 3]).unsqueeze(2)  # Only apply ReLU to density output
     if cfg['outputs'] == 'density':
         out = process_density(raw_output)
-    elif cfg['outputs'] == 'color_and_density':
+    elif cfg['outputs'] == 'color_and_density' or cfg['outputs'] == 'color_and_density_mega':
         if has_flag(cfg, 'no_color_sigmoid'):
             rgb = raw_output[:, :, 0:3]
         else:
@@ -172,7 +172,7 @@ def train_and_test_multi_network(multi_network, all_examples, domain_mins, domai
                 
             for metric in list_metrics():
                 best_errors_per_network[metric] = torch.min(errors_per_network[metric], best_errors_per_network[metric])
-                if cfg['outputs'] == 'color_and_density':
+                if cfg['outputs'] == 'color_and_density' or cfg['outputs'] == 'color_and_density_mega':
                     best_errors_per_network_color[metric] = torch.min(errors_per_network_color[metric], best_errors_per_network_color[metric])
                     best_errors_per_network_density[metric] = torch.min(errors_per_network_density[metric], best_errors_per_network_density[metric])
             
@@ -182,7 +182,7 @@ def train_and_test_multi_network(multi_network, all_examples, domain_mins, domai
                     error_log[network_index] += '(%.5f) ' % (time.time() - start_time)
                 for metric in list_metrics():
                     error_log[network_index] += metric + ': {:.5f} '.format(errors_per_network[metric][network_index].item())
-                    if cfg['outputs'] == 'color_and_density':
+                    if cfg['outputs'] == 'color_and_density' or cfg['outputs'] == 'color_and_density_mega':
                         error_log[network_index] += '(d: {:.5f}, c: {:.5f}) '.format(errors_per_network_density[metric][network_index].item(),
                             errors_per_network_color[metric][network_index].item())
                 if saturation[network_index]:
@@ -206,7 +206,7 @@ def test_multi_network(multi_network, test_examples, domain_mins, domain_maxs, c
     with torch.no_grad():
         if cfg['outputs'] == 'density':
             num_output_channels = 1
-        if cfg['outputs'] == 'color_and_density':
+        if cfg['outputs'] == 'color_and_density' or cfg['outputs'] == 'color_and_density_mega':
             num_output_channels = 4
         out = torch.empty(num_networks, num_test_examples, num_output_channels).to(test_examples)
         test_targets = torch.empty(num_networks, num_test_examples, num_output_channels).to(test_examples)
@@ -243,7 +243,7 @@ def test_multi_network(multi_network, test_examples, domain_mins, domain_maxs, c
             errors_per_network[metric] = errors_per_point[metric].mean(dim=1).cpu()
             if cfg['outputs'] == 'density':
                 errors_per_network_density[metric] = errors_per_network[metric]
-            if cfg['outputs'] == 'color_and_density':
+            if cfg['outputs'] == 'color_and_density' or cfg['outputs'] == 'color_and_density_mega':
                 errors_per_network_color[metric] = errors[metric][:, :, :3].mean(dim=2).mean(dim=1).cpu()
                 errors_per_network_density[metric] = errors[metric][:, :, 3].mean(dim=1).cpu()
             errors_per_point[metric] = errors_per_point[metric].cpu()
@@ -295,7 +295,7 @@ def train_and_test_nodes(node_batch, pretrained_nerf, processing_saturated_nodes
     if cfg['outputs'] == 'density': 
         direction_num_input_channels, direction_fourier_embedding = 0, None
         num_output_channels = 1
-    if cfg['outputs'] == 'color_and_density':
+    if cfg['outputs'] == 'color_and_density' or cfg['outputs'] == 'color_and_density_mega':
         direction_num_input_channels, direction_fourier_embedding = create_multi_network_fourier_embedding(num_networks, cfg['num_frequencies_direction'])
         num_output_channels = 4
     MultiNetworkLinear.rng_state = None
@@ -341,6 +341,9 @@ def train_and_test_nodes(node_batch, pretrained_nerf, processing_saturated_nodes
             if cfg['outputs'] == 'color_and_density':
                 all_examples[start:end, 6:9] = F.sigmoid(raw_output[:, 0:3]).cpu() # Apply sigmoid to color outputs
                 all_examples[start:end, 9] = process_density(raw_output)
+            if cfg['outputs'] == 'color_and_density_mega':
+                all_examples[start:end, 6:9] = raw_output[:, 0:3].cpu()
+                all_examples[start:end, 9] = process_density(raw_output)
             if has_flag(cfg, 'use_premultiplied_colors'):
                 all_examples[start:end, 6:9] *= all_examples[start:end, 9]
             del raw_output
@@ -359,12 +362,12 @@ def log_error_stats(initial_nodes, phase, cfg):
     domain_maxs = []
     volumes = []
     best_errors = {}
-    if cfg[phase]['outputs'] == 'color_and_density':
+    if cfg[phase]['outputs'] == 'color_and_density' or cfg[phase]['outputs'] == 'color_and_density_mega':
         best_errors_color = {}
         best_errors_density = {}
     for metric in list_metrics():
         best_errors[metric] = []
-        if cfg[phase]['outputs'] == 'color_and_density':
+        if cfg[phase]['outputs'] == 'color_and_density' or cfg[phase]['outputs'] == 'color_and_density_mega':
             best_errors_color[metric] = []
             best_errors_density[metric] = []
 
@@ -381,12 +384,12 @@ def log_error_stats(initial_nodes, phase, cfg):
             for metric in list_metrics():
                 if phase == 'discovery':
                     best_errors[metric].append(node.discovery_best_error[metric])
-                    if cfg[phase]['outputs'] == 'color_and_density':
+                    if cfg[phase]['outputs'] == 'color_and_density' or cfg[phase]['outputs'] == 'color_and_density_mega':
                         best_errors_color[metric].append(node.discovery_best_error_color[metric])
                         best_errors_density[metric].append(node.discovery_best_error_density[metric])
                 if phase == 'final':
                     best_errors[metric].append(node.final_best_error[metric])
-                    if cfg[phase]['outputs'] == 'color_and_density':
+                    if cfg[phase]['outputs'] == 'color_and_density' or cfg[phase]['outputs'] == 'color_and_density_mega':
                         best_errors_color[metric].append(node.final_best_error_color[metric])
                         best_errors_density[metric].append(node.final_best_error_density[metric])
                         
@@ -403,7 +406,7 @@ def log_error_stats(initial_nodes, phase, cfg):
         for metric in list_metrics():
             Logger.write('[' + metric + ']')
             write_log('total', domain_mins, domain_maxs, volumes, best_errors[metric])
-            if cfg[phase]['outputs'] == 'color_and_density':
+            if cfg[phase]['outputs'] == 'color_and_density' or cfg[phase]['outputs'] == 'color_and_density_mega':
                 write_log('color', domain_mins, domain_maxs, volumes, best_errors_color[metric])
                 write_log('density', domain_mins, domain_maxs, volumes, best_errors_density[metric])
 

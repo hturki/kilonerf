@@ -1,7 +1,7 @@
 blender_half_res: false
 dataset_dir: /compute/autobot-0-15/hturki/rubble_undist_pix4d_converted_kilo
-global_domain_min: [-0.0839, -0.8365, -0.9920]
-global_domain_max: [0.3161, 0.8365, 0.9960]
+global_domain_min: [0.0618465, -0.696314, -0.832038]
+global_domain_max: [0.264971, 0.696314, 0.828704]
 dataset_type: chunks
 near: 0
 far: 1
@@ -23,7 +23,7 @@ discovery:
   num_frequencies_direction: 4
   num_hidden_layers: 2
   num_train_examples_per_network: 1000000
-  outputs: color_and_density
+  outputs: color_and_density_mega
   quantile_se: 0.99
   query_batch_size: 80000
   refeed_position_index: None
@@ -40,7 +40,8 @@ fixed_resolution:
 max_error: 100000
 performance_monitoring: false
 pretrained_cfg_path: cfgs/paper/pretrain/rubble.yaml
-pretrained_checkpoint_path: logs/paper/pretrain/rubble/checkpoint_0250000.pth
+pretrained_checkpoint_path: /data2/hturki/mega-nerf-results/merged/rubble/rubble-8.pt
+image_index: 0
 render_only: true
 restart_after_checkpoint: true
 skip_final: true

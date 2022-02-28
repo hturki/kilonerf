@@ -17,7 +17,7 @@ class Embedder:
     def __init__(self, **kwargs):
         self.kwargs = kwargs
         self.create_embedding_fn()
-        
+
     def create_embedding_fn(self):
         embed_fns = []
         d = self.kwargs['input_dims']
@@ -25,23 +25,23 @@ class Embedder:
         if self.kwargs['include_input']:
             embed_fns.append(lambda x : x)
             out_dim += d
-            
+
         max_freq = self.kwargs['max_freq_log2']
         N_freqs = self.kwargs['num_freqs']
-        
+
         if self.kwargs['log_sampling']:
             freq_bands = 2.**torch.linspace(0., max_freq, steps=N_freqs)
         else:
             freq_bands = torch.linspace(2.**0., 2.**max_freq, steps=N_freqs)
-            
+
         for freq in freq_bands:
             for p_fn in self.kwargs['periodic_fns']:
                 embed_fns.append(lambda x, p_fn=p_fn, freq=freq : p_fn(x * freq))
                 out_dim += d
-                    
+
         self.embed_fns = embed_fns
         self.out_dim = out_dim
-        
+
     def embed(self, inputs):
         return torch.cat([fn(inputs) for fn in self.embed_fns], -1)
 
@@ -49,7 +49,7 @@ class Embedder:
 def get_embedder(multires, i=0):
     if i == -1:
         return nn.Identity(), 3
-    
+
     embed_kwargs = {
                 'include_input' : True,
                 'input_dims' : 3,
@@ -58,11 +58,11 @@ def get_embedder(multires, i=0):
                 'log_sampling' : True,
                 'periodic_fns' : [torch.sin, torch.cos],
     }
-    
+
     embedder_obj = Embedder(**embed_kwargs)
     embed = lambda x, eo=embedder_obj : eo.embed(x)
     return embed, embedder_obj.out_dim
-    
+
 
 class DenseLayer(nn.Linear):
     def __init__(self, in_dim: int, out_dim: int, activation: str = "relu", *args, **kwargs) -> None:
@@ -88,26 +88,26 @@ class NeRF(nn.Module):
         self.skips = skips
         self.use_viewdirs = use_viewdirs
         self.use_initialization_fix = use_initialization_fix
-        
+
         if direction_layer_size is None:
             direction_layer_size = W//2
-            
+
         def linear_layer(in_features, out_features, activation):
             if self.use_initialization_fix:
                 return DenseLayer(in_features, out_features, activation=activation)
             else:
                 return nn.Linear(in_features, out_features)
-            
+
         self.pts_linears = nn.ModuleList(
             [linear_layer(input_ch, W, activation="relu")] + [linear_layer(W, W, activation="relu") if i not in self.skips else linear_layer(W + input_ch, W, activation="relu") for i in range(D-1)])
-        
+
         ### Implementation according to the official code release (https://github.com/bmild/nerf/blob/master/run_nerf_helpers.py#L104-L105)
         self.views_linears = nn.ModuleList([linear_layer(input_ch_views + W, direction_layer_size, activation="relu")])
 
         ### Implementation according to the paper
         # self.views_linears = nn.ModuleList(
         #     [nn.Linear(input_ch_views + W, W//2)] + [nn.Linear(W//2, W//2) for i in range(D//2)])
-     
+
         if use_viewdirs:
             self.feature_linear = linear_layer(W, W, activation="linear")
             self.alpha_linear = linear_layer(W, 1, activation="linear")
@@ -128,7 +128,7 @@ class NeRF(nn.Module):
             alpha = self.alpha_linear(h)
             feature = self.feature_linear(h)
             h = torch.cat([feature, input_views], -1)
-        
+
             for i, l in enumerate(self.views_linears):
                 h = self.views_linears[i](h)
                 h = F.relu(h)
@@ -138,17 +138,17 @@ class NeRF(nn.Module):
         else:
             outputs = self.output_linear(h)
 
-        return outputs    
+        return outputs
 
     def load_weights_from_keras(self, weights):
         assert self.use_viewdirs, "Not implemented if use_viewdirs=False"
-        
+
         # Load pts_linears
         for i in range(self.D):
             idx_pts_linears = 2 * i
-            self.pts_linears[i].weight.data = torch.from_numpy(np.transpose(weights[idx_pts_linears]))    
+            self.pts_linears[i].weight.data = torch.from_numpy(np.transpose(weights[idx_pts_linears]))
             self.pts_linears[i].bias.data = torch.from_numpy(np.transpose(weights[idx_pts_linears+1]))
-        
+
         # Load feature_linear
         idx_feature_linear = 2 * self.D
         self.feature_linear.weight.data = torch.from_numpy(np.transpose(weights[idx_feature_linear]))
@@ -168,7 +168,7 @@ class NeRF(nn.Module):
         idx_alpha_linear = 2 * self.D + 6
         self.alpha_linear.weight.data = torch.from_numpy(np.transpose(weights[idx_alpha_linear]))
         self.alpha_linear.bias.data = torch.from_numpy(np.transpose(weights[idx_alpha_linear+1]))
-        
+
 class CoarseAndFine(nn.Module):
     def __init__(self, model_coarse, model_fine) :
         super(CoarseAndFine, self).__init__()
@@ -195,7 +195,7 @@ def get_rays(intrinsics, c2w, expand_origin=True):
     dirs = torch.stack([(i - intrinsics.cx) / intrinsics.fx, -(j - intrinsics.cy) / intrinsics.fy, -torch.ones_like(i)], -1)
     # Rotate ray directions from camera frame to the world frame
     rays_d = torch.sum(dirs[..., np.newaxis, :] * c2w[:3,:3], -1)  # dot product, equals to: [c2w.dot(dir) for dir in dirs]
-    ''' 
+    '''
     # Translate camera frame's origin to the world frame. It is the origin of all rays.
     rays_o = c2w[:3,-1].expand(rays_d.shape)
     if expand_origin:
@@ -222,7 +222,7 @@ def ndc_rays(H, W, focal, near, rays_o, rays_d):
     # Shift ray origins to near plane
     t = -(near + rays_o[...,2]) / rays_d[...,2]
     rays_o = rays_o + t[...,None] * rays_d
-    
+
     # Projection
     o0 = -1./(W/(2.*focal)) * rays_o[...,0] / rays_o[...,2]
     o1 = -1./(H/(2.*focal)) * rays_o[...,1] / rays_o[...,2]
@@ -231,10 +231,10 @@ def ndc_rays(H, W, focal, near, rays_o, rays_d):
     d0 = -1./(W/(2.*focal)) * (rays_d[...,0]/rays_d[...,2] - rays_o[...,0]/rays_o[...,2])
     d1 = -1./(H/(2.*focal)) * (rays_d[...,1]/rays_d[...,2] - rays_o[...,1]/rays_o[...,2])
     d2 = -2. * near / rays_o[...,2]
-    
+
     rays_o = torch.stack([o0,o1,o2], -1)
     rays_d = torch.stack([d0,d1,d2], -1)
-    
+
     return rays_o, rays_d
 
 
@@ -284,13 +284,25 @@ def sample_pdf(bins, weights, N_samples, det=False, pytest=False):
 
     return samples
 
+
+class ChainImageEmbeddingAndModel(nn.Module):
+    def __init__(self, model, embedding):
+        super(ChainImageEmbeddingAndModel, self).__init__()
+        self.model = model
+        self.embedding = embedding
+
+    def forward(self, points_and_dirs):
+        image_indices = self.embedding * torch.ones(points_and_dirs.shape[0], 1, device=points_and_dirs.device)
+        return self.model(torch.cat([points_and_dirs, image_indices], 1))
+
+
 class ChainEmbeddingAndModel(nn.Module):
     def __init__(self, model, embed_fn, embeddirs_fn):
         super(ChainEmbeddingAndModel, self).__init__()
         self.model = model
         self.embed_fn = embed_fn
         self.embeddirs_fn = embeddirs_fn
-    
+
     def forward(self, points_and_dirs):
         embedded_points = self.embed_fn(points_and_dirs[:, :3])
         if self.embeddirs_fn is not None:
@@ -300,20 +312,21 @@ class ChainEmbeddingAndModel(nn.Module):
         else:
             return self.model(embedded_points)
 
-def lookat(look_from, look_to, tmp = np.asarray([0., 0., 1.])):
+
+def lookat(look_from, look_to, tmp=np.asarray([0., 0., 1.])):
     forward = look_from - look_to
     forward = forward / np.linalg.norm(forward)
     right = np.cross(tmp, forward)
     right = right / np.linalg.norm(right) # TODO: handle np.linalg.norm(right) == 0
     up = np.cross(forward, right)
-    
+
     c2w_T = np.zeros((4,4))
     c2w_T[0,0:3] = right
     c2w_T[1,0:3] = up
     c2w_T[2,0:3] = forward
     c2w_T[3,0:3] = look_from
     c2w_T[3,3] = 1
-    
+
     return c2w_T.T
 
 class OrbitCamera:
@@ -324,11 +337,11 @@ class OrbitCamera:
         self.azimuth = azimuth
         self.device = device
         self.compute_c2w()
-        
+
     def zoom(self, delta):
         self.radius += delta
         self.compute_c2w()
-        
+
     def pan(self, delta_x, delta_y):
         c2w_T = self.c2w.cpu().numpy().T
         right = c2w_T[0,0:3]
@@ -336,14 +349,14 @@ class OrbitCamera:
         self.center += delta_x * right
         self.center += delta_y * up
         self.compute_c2w()
-    
+
     def rotate(self, delta_x, delta_y):
         self.azimuth += delta_x
         self.inclination += delta_y
         eps = 0.001
         self.inclination = min(max(eps, self.inclination), math.pi - eps)
         self.compute_c2w()
-        
+
     def compute_c2w(self):
         offset = np.asarray([self.radius * math.cos(self.azimuth) * math.sin(self.inclination),
                              self.radius * math.sin(self.azimuth) * math.sin(self.inclination),

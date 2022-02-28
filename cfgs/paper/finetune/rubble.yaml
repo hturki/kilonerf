@@ -17,3 +17,7 @@ precrop_iterations: 0
 raw_noise_std: 0.0
 render_only: false
 rng_seed_fix: true
+chunk_paths:
+  - /compute/trinity-0-13/hturki/cache/rubble-dense
+  - /compute/trinity-0-21/hturki/cache/rubble-dense
+val_path: /compute/trinity-1-29/hturki/mega-nerf-data/rubble/val/metadata
